@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cotizador Lara 3D</title>
+    <style>
+        :root {
+            --bg: #0f0f11;
+            --surface: #1c1c1e;
+            --input-bg: #2c2c2e;
+            --text-main: #ffffff;
+            --text-sec: #8e8e93;
+            --accent: #0a84ff;
+            --accent-grad: linear-gradient(135deg, #0a84ff, #5e5ce6);
+            --danger: #ff453a;
+            --success: #32d74b;
+            --warning: #ff9f0a;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .app-container {
+            max-width: 420px;
+            margin: 0 auto;
+            padding-bottom: 50px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 20px;
+            font-weight: 600;
+            margin: 0;
+            letter-spacing: -0.5px;
+        }
+
+        .subtitle {
+            font-size: 13px;
+            margin-top: 5px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: bold;
+            color: var(--accent);
+        }
+
+        /* Inputs */
+        .input-group { margin-bottom: 20px; }
+
+        .label-text {
+            display: block;
+            font-size: 12px;
+            color: var(--text-sec);
+            margin-bottom: 8px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .input-row { display: flex; gap: 12px; }
+        .input-wrapper { flex: 1; position: relative; }
+
+        input {
+            width: 100%;
+            background-color: var(--input-bg);
+            border: none;
+            padding: 14px 12px;
+            border-radius: 12px;
+            color: var(--text-main);
+            font-size: 16px;
+            box-sizing: border-box;
+            transition: transform 0.1s ease;
+        }
+        
+        input:focus {
+            outline: 2px solid var(--accent);
+            background-color: #3a3a3c;
+        }
+
+        .qty-wrapper input {
+            text-align: center;
+            font-weight: 700;
+            font-size: 18px;
+            background: var(--surface);
+            border: 1px solid #333;
+        }
+        
+        .currency-input input { padding-left: 25px; }
+        .currency-symbol {
+            position: absolute; left: 10px; top: 14px;
+            color: var(--text-sec); font-size: 16px;
+        }
+
+        button {
+            width: 100%;
+            background: var(--accent-grad);
+            color: white;
+            padding: 16px;
+            border: none;
+            border-radius: 14px;
+            font-size: 17px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            box-shadow: 0 4px 15px rgba(10, 132, 255, 0.3);
+            transition: transform 0.2s;
+        }
+        button:active { transform: scale(0.97); }
+
+        details {
+            margin-top: 25px;
+            background: var(--surface);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        summary {
+            padding: 15px;
+            font-size: 13px;
+            color: var(--text-sec);
+            cursor: pointer;
+            list-style: none;
+            display: flex;
+            justify-content: space-between;
+        }
+        .config-content { padding: 15px; padding-top: 0; }
+
+        /* RESULTS MODAL */
+        .result-modal {
+            display: none;
+            margin-top: 30px;
+            background: var(--surface);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .res-header { text-align: center; margin-bottom: 20px; }
+        .res-product { font-size: 18px; font-weight: 600; color: var(--text-main); text-transform: uppercase; }
+        .res-date { font-size: 12px; color: var(--text-sec); }
+
+        .price-hero { text-align: center; margin-bottom: 25px; }
+        .price-label { font-size: 12px; color: var(--text-sec); text-transform: uppercase; }
+        .price-value { font-size: 36px; font-weight: 700; color: var(--text-main); letter-spacing: -1px; margin: 5px 0; }
+        .price-sub { font-size: 13px; color: var(--accent); font-weight: 500; }
+
+        .stat-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 14px;
+        }
+        .stat-label { color: var(--text-sec); }
+        .stat-val { font-weight: 500; }
+        .mini-tag { font-size: 10px; background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; margin-left: 5px; }
+        .val-cost { color: var(--text-main); }
+        .val-profit { color: var(--success); }
+        .val-warn { color: var(--danger); }
+
+        .total-section {
+            background: rgba(255,255,255,0.05); margin: 20px -25px 0 -25px; padding: 20px 25px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .total-label { font-size: 13px; color: var(--text-sec); }
+        .total-amount { font-size: 20px; font-weight: 700; color: var(--text-main); }
+
+        /* PRODUCTION CARD */
+        .production-card {
+            margin-top: 25px;
+            border-top: 1px dashed #333;
+            padding-top: 20px;
+        }
+        .prod-title {
+            font-size: 11px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+        .prod-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 10px;
+        }
+        .prod-item {
+            background: rgba(255,255,255,0.03);
+            border-radius: 10px;
+            padding: 10px 5px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .prod-icon { font-size: 18px; margin-bottom: 5px; }
+        .prod-val { font-size: 14px; font-weight: 700; color: #fff; }
+        .prod-label { font-size: 9px; color: #666; margin-top: 2px; }
+
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <header>
+        <h1>Cotizador 3D</h1>
+        <div class="subtitle">Lara 3D</div>
+    </header>
+
+    <div class="input-group">
+        <label class="label-text">Proyecto</label>
+        <div class="input-row">
+            <div class="input-wrapper" style="flex: 2;"><input type="text" id="nombreProducto" placeholder="Nombre"></div>
+            <div class="input-wrapper" style="flex: 1.5;"><input type="date" id="fechaEntrega"></div>
+        </div>
+    </div>
+
+    <div class="input-group">
+        <label class="label-text">Cantidad de Piezas</label>
+        <div class="qty-wrapper">
+            <input type="number" id="cantidadTotal" value="1" inputmode="numeric">
+        </div>
+    </div>
+
+    <div class="input-group">
+        <label class="label-text">Datos por Unidad</label>
+        <div class="input-row">
+            <div class="input-wrapper"><input type="number" id="pesoPieza" placeholder="Peso (g)" inputmode="numeric"></div>
+            <div class="input-wrapper"><input type="number" id="tiempoMinutos" placeholder="Tiempo (min)" inputmode="numeric"></div>
+        </div>
+    </div>
+
+    <div class="input-group">
+        <label class="label-text">Extras & Acabados</label>
+        <div class="input-row">
+            <div class="input-wrapper"><input type="number" id="cantArgollas" placeholder="Argollas" inputmode="numeric"></div>
+            <div class="input-wrapper"><input type="number" id="cantBolsas" placeholder="Bolsas" inputmode="numeric"></div>
+            <div class="input-wrapper currency-input">
+                <span class="currency-symbol">$</span>
+                <input type="number" id="costoPintura" placeholder="Pintura" inputmode="numeric">
+            </div>
+        </div>
+    </div>
+
+    <details>
+        <summary>Configuración (160%) <span>⚙️</span></summary>
+        <div class="config-content">
+            <div class="input-group" style="margin-top:15px;">
+                <label class="label-text">Costos Máquina / Hora</label>
+                <div class="input-row">
+                    <div class="input-wrapper"><input type="number" id="amortizacionHora" value="3.00"></div>
+                    <div class="input-wrapper"><input type="number" id="mantenimientoHora" value="1.50"></div>
+                </div>
+            </div>
+            <div class="input-group">
+                <label class="label-text">Energía & Margen</label>
+                <div class="input-row">
+                    <div class="input-wrapper"><input type="number" id="precioLuz" value="4.00"></div>
+                    <div class="input-wrapper"><input type="number" id="consumoKw" value="0.2"></div>
+                    <div class="input-wrapper"><input type="number" id="margen" value="160"></div>
+                </div>
+            </div>
+        </div>
+    </details>
+
+    <button onclick="calcular()">Calcular Precio</button>
+
+    <div id="resultadoPanel" class="result-modal">
+        <div class="res-header">
+            <div class="res-product" id="resNombre">Producto</div>
+            <div class="res-date" id="resFecha">Fecha</div>
+        </div>
+
+        <div class="price-hero">
+            <div class="price-label">Precio Unitario</div>
+            <div class="price-value" id="resPrecioUnitario">$0.00</div>
+            <div class="price-sub">lote de <span id="resCantidadDisp">1</span> pzas</div>
+        </div>
+
+        <div class="stat-row">
+            <span class="stat-label">Costo Directo <span class="mini-tag">Mat+Luz+Ext</span></span>
+            <span class="stat-val val-cost" id="rowCostoDirecto">$0.00</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Ganancia Bruta</span>
+            <span class="stat-val val-cost" id="rowGananciaBruta">$0.00</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Reserva Máquina <span class="mini-tag">Ahorro</span></span>
+            <span class="stat-val val-warn" id="rowReserva">$0.00</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label" style="color:var(--text-main); font-weight:500;">Ganancia Neta</span>
+            <span class="stat-val val-profit" id="rowGananciaNeta">$0.00</span>
+        </div>
+
+        <div class="total-section">
+            <span class="total-label">Cobro Total</span>
+            <span class="total-amount" id="resGranTotal">$0.00</span>
+        </div>
+
+        <div class="production-card">
+            <div class="prod-title">📋 Requerimientos Totales</div>
+            <div class="prod-grid">
+                <div class="prod-item">
+                    <span class="prod-icon">⏱️</span>
+                    <span class="prod-val" id="reqTiempo">0h</span>
+                    <span class="prod-label">Tiempo</span>
+                </div>
+                <div class="prod-item">
+                    <span class="prod-icon">🧵</span>
+                    <span class="prod-val" id="reqFilamento">0g</span>
+                    <span class="prod-label">Filamento</span>
+                </div>
+                <div class="prod-item">
+                    <span class="prod-icon">🔗</span>
+                    <span class="prod-val" id="reqArgollas">0</span>
+                    <span class="prod-label">Argollas</span>
+                </div>
+                <div class="prod-item">
+                    <span class="prod-icon">🛍️</span>
+                    <span class="prod-val" id="reqBolsas">0</span>
+                    <span class="prod-label">Bolsas</span>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+</div>
+
+<script>
+    // Inicializar fecha
+    try {
+        document.getElementById('fechaEntrega').valueAsDate = new Date();
+    } catch(e) {
+        console.log("Error fecha automática");
+    }
+
+    function calcular() {
+        try {
+            // --- DATA ---
+            let nombre = document.getElementById('nombreProducto').value || "Cotización";
+            let fecha = document.getElementById('fechaEntrega').value;
+            let cantidad = parseFloat(document.getElementById('cantidadTotal').value) || 1;
+            
+            // Datos Unitarios
+            let peso = parseFloat(document.getElementById('pesoPieza').value) || 0;
+            let minutos = parseFloat(document.getElementById('tiempoMinutos').value) || 0;
+            
+            // Extras
+            let numArgollas = parseFloat(document.getElementById('cantArgollas').value) || 0;
+            let numBolsas = parseFloat(document.getElementById('cantBolsas').value) || 0;
+            let costoPintura = parseFloat(document.getElementById('costoPintura').value) || 0;
+
+            // Configuración
+            let margen = parseFloat(document.getElementById('margen').value) || 0;
+            let precioLuz = parseFloat(document.getElementById('precioLuz').value) || 0;
+            let valAmort = parseFloat(document.getElementById('amortizacionHora').value) || 0;
+            let valMant = parseFloat(document.getElementById('mantenimientoHora').value) || 0;
+            let kW = parseFloat(document.getElementById('consumoKw').value) || 0;
+
+            // Constantes
+            const PRECIO_BOBINA = 300;
+            const PESO_BOBINA = 1000;
+            const P_ARGOLLA = 1.0;
+            const P_BOLSA = 1.0;
+
+            // --- CÁLCULOS FINANCIEROS ---
+            let horas = minutos / 60;
+            
+            let u_mat = (PRECIO_BOBINA / PESO_BOBINA) * peso;
+            let u_luz = horas * kW * precioLuz;
+            let u_insumos = (numArgollas * P_ARGOLLA) + (numBolsas * P_BOLSA) + costoPintura;
+            let u_costoDirecto = u_mat + u_luz + u_insumos;
+
+            let u_gananciaBruta = u_costoDirecto * (margen / 100);
+            let u_precioVenta = u_costoDirecto + u_gananciaBruta;
+            let u_reserva = horas * (valAmort + valMant);
+            let u_gananciaNeta = u_gananciaBruta - u_reserva;
+
+            let t_costoDirecto = u_costoDirecto * cantidad;
+            let t_gananciaBruta = u_gananciaBruta * cantidad;
+            let t_reserva = u_reserva * cantidad;
+            let t_gananciaNeta = u_gananciaNeta * cantidad;
+            let t_granTotal = u_precioVenta * cantidad;
+
+            // --- CÁLCULOS PRODUCCIÓN ---
+            let totalPeso = (peso * cantidad).toFixed(0);
+            let totalArgollasNum = (numArgollas * cantidad).toFixed(0);
+            let totalBolsasNum = (numBolsas * cantidad).toFixed(0);
+            
+            // Tiempo Total en Texto (sin comillas especiales para compatibilidad)
+            let totalMinutos = minutos * cantidad;
+            let prodHoras = Math.floor(totalMinutos / 60);
+            let prodMinutos = Math.round(totalMinutos % 60);
+            let tiempoTexto = prodHoras + "h " + prodMinutos + "m";
+
+            // --- MOSTRAR RESULTADOS ---
+            document.getElementById('resNombre').innerText = nombre;
+            document.getElementById('resFecha').innerText = fecha;
+            document.getElementById('resCantidadDisp').innerText = cantidad;
+
+            // Finanzas
+            document.getElementById('resPrecioUnitario').innerText = "$" + u_precioVenta.toFixed(2);
+            document.getElementById('rowCostoDirecto').innerText = "$" + t_costoDirecto.toFixed(2);
+            document.getElementById('rowGananciaBruta').innerText = "$" + t_gananciaBruta.toFixed(2);
+            document.getElementById('rowReserva').innerText = "- $" + t_reserva.toFixed(2);
+            
+            let elGanancia = document.getElementById('rowGananciaNeta');
+            if(t_gananciaNeta < 0) {
+                elGanancia.style.color = "#ff453a"; // Color rojo manual
+                elGanancia.innerText = "- $" + Math.abs(t_gananciaNeta).toFixed(2);
+            } else {
+                elGanancia.style.color = "#32d74b"; // Color verde manual
+                elGanancia.innerText = "+ $" + t_gananciaNeta.toFixed(2);
+            }
+
+            document.getElementById('resGranTotal').innerText = "$" + t_granTotal.toFixed(2);
+
+            // Inventario
+            document.getElementById('reqTiempo').innerText = tiempoTexto;
+            document.getElementById('reqFilamento').innerText = totalPeso + "g";
+            document.getElementById('reqArgollas').innerText = totalArgollasNum;
+            document.getElementById('reqBolsas').innerText = totalBolsasNum;
+
+            // Mostrar Panel
+            let panel = document.getElementById('resultadoPanel');
+            panel.style.display = "block";
+            panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+        } catch (error) {
+            alert("Ocurrió un error. Verifica que todos los campos tengan números.");
+            console.error(error);
+        }
+    }
+</script>
+
+</body>
+</html>
